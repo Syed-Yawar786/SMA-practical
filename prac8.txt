@@ -1,0 +1,154 @@
+NO. 08 Aim: Solve the Traveling Salesman Problem using Flower
+Pollination Algorithm and analyse solution efficiency.
+
+import numpy as np
+import matplotlib.pyplot as plt
+import math
+import time
+
+np.random.seed(42)
+
+N = 10
+cities = np.random.rand(N, 2) * 100
+
+def tour_length(tour):
+    distance = 0.0
+
+    for i in range(len(tour)):
+        city_a = tour[i]
+        city_b = tour[(i + 1) % len(tour)]
+
+        distance += np.linalg.norm(
+            cities[city_a] - cities[city_b]
+        )
+
+    return distance
+
+
+POP = 20
+ITER = 300
+p = 0.8
+
+flowers = [
+    np.random.permutation(N) for _ in range(POP)
+]
+
+fitness = np.array([
+    tour_length(flower) for flower in flowers
+])
+
+best_index = np.argmin(fitness)
+
+best = flowers[best_index].copy()
+best_value = fitness[best_index]
+
+history = []
+start_time = time.time()
+
+
+for iteration in range(ITER):
+
+    for i in range(POP):
+
+        new = flowers[i].copy()
+
+        if np.random.rand() < p:
+
+            swaps = max(
+                1,
+                min(N - 1, int(abs(np.random.standard_cauchy())))
+            )
+
+            for _ in range(swaps):
+                j, k = np.random.choice(N, 2, replace=False)
+                new[j], new[k] = new[k], new[j]
+
+        else:
+
+            a, b = np.random.choice(POP, 2, replace=False)
+
+            parent_a = flowers[a]
+            parent_b = flowers[b]
+
+            cut1, cut2 = sorted(
+                np.random.choice(N, 2, replace=False)
+            )
+
+            if cut1 == cut2:
+                cut2 = min(N, cut1 + 1)
+
+            child = np.full(N, -1, dtype=int)
+
+            child[cut1:cut2] = parent_a[cut1:cut2]
+
+            remaining = [
+                city for city in parent_b if city not in child
+            ]
+
+            empty_positions = [
+                pos for pos in range(N) if child[pos] == -1
+            ]
+
+            for pos, city in zip(empty_positions, remaining):
+                child[pos] = city
+
+            new = child
+
+        new_fitness = tour_length(new)
+
+        if new_fitness < fitness[i]:
+            flowers[i] = new.copy()
+            fitness[i] = new_fitness
+
+        if fitness[i] < best_value:
+            best_value = fitness[i]
+            best = flowers[i].copy()
+
+    history.append(best_value)
+
+    if (iteration + 1) % 25 == 0:
+        print(
+            f"Iteration {iteration + 1:3d} | "
+            f"Best distance = {best_value:.2f}"
+        )
+
+
+execution_time = time.time() - start_time
+
+
+print("\nBEST TOUR:", best)
+print("Best distance:", round(best_value, 2))
+print("Execution time:", round(execution_time, 4), "seconds")
+print("Every city visited exactly once:", len(set(best)) == N)
+
+
+fig, ax = plt.subplots(1, 2, figsize=(12, 5))
+
+ax[0].plot(history)
+ax[0].set_title("FPA Convergence")
+ax[0].set_xlabel("Iteration")
+ax[0].set_ylabel("Best Distance")
+ax[0].grid(True)
+
+
+tour_points = cities[np.append(best, best[0])]
+
+ax[1].plot(
+    tour_points[:, 0],
+    tour_points[:, 1],
+    "o-"
+)
+
+for i, (x, y) in enumerate(cities):
+    ax[1].annotate(str(i), (x, y))
+
+ax[1].set_title(
+    f"Best Tour (Distance = {best_value:.2f})"
+)
+
+ax[1].set_xlabel("X coordinate")
+ax[1].set_ylabel("Y coordinate")
+ax[1].grid(True)
+
+plt.tight_layout()
+plt.show()

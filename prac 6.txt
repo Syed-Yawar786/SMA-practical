@@ -1,0 +1,56 @@
+NO. 06 Aim: Minimize the regression loss function using BFGS method for
+housing data.
+
+import numpy as np
+from sklearn.datasets import fetch_california_housing
+from sklearn.preprocessing import StandardScaler
+from scipy.optimize import minimize
+
+data = fetch_california_housing()
+
+print("Data loaded. Shape:", data.data.shape)
+
+X = data.data
+y = data.target
+
+print("X shape:", X.shape)
+print("y shape:", y.shape)
+
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+print("Features scaled.")
+
+X = np.hstack([np.ones((X_scaled.shape[0], 1)), X_scaled])
+
+n_samples, n_features = X.shape
+
+print("Added bias. X shape:", X.shape)
+
+def mse_loss(weights):
+    predictions = X @ weights
+    return np.mean((predictions - y) ** 2)
+
+initial_weights = np.zeros(n_features)
+
+result = minimize(
+    fun=mse_loss,
+    x0=initial_weights,
+    method="BFGS",
+    options={"maxiter": 500}
+)
+
+print("Finished. Success:", result.success)
+print("Message:", result.message)
+
+best_weights = result.x
+
+print("Optimized weights:")
+print(best_weights)
+
+print("Loss (MSE):", result.fun)
+
+predictions = X @ best_weights
+
+print("Actual prices:", y[:5])
+print("First 5 predicted prices:", np.round(predictions[:5], 3))

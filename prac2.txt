@@ -1,0 +1,59 @@
+NO. 02 Aim: Integrate daily COVID-19 case vectors to compute cumulative
+trends and visualize them.
+
+import pandas as pd
+import matplotlib.pyplot as plt
+
+df = pd.read_csv("time_series_covid19_confirmed_global.csv")
+
+country = "India"
+
+df_country = df[df["Country/Region"] == country]
+
+if df_country.empty:
+    raise ValueError(f"No records found for {country}. Check the dataset.")
+
+time_series = df_country.iloc[:, 4:].sum(axis=0)
+
+time_series.index = pd.to_datetime(time_series.index, format="%m/%d/%y")
+time_series = time_series.sort_index()
+
+cases = pd.DataFrame({
+    "Date": time_series.index,
+    "Cumulative": time_series.values
+})
+
+cases["Daily"] = cases["Cumulative"].diff().fillna(0).clip(lower=0)
+
+cases["CumSum"] = cases["Daily"].cumsum()
+
+print("LAST FIVE RECORDS")
+print(cases.tail())
+
+fig, ax1 = plt.subplots(figsize=(12, 5))
+
+ax1.bar(
+    cases["Date"],
+    cases["Daily"],
+    alpha=0.45,
+    label="Daily New Cases"
+)
+
+ax1.set_xlabel("Date")
+ax1.set_ylabel("Daily New Cases")
+
+ax2 = ax1.twinx()
+
+ax2.plot(
+    cases["Date"],
+    cases["Cumulative"],
+    linewidth=2,
+    label="Cumulative Cases"
+)
+
+ax2.set_ylabel("Cumulative Cases")
+
+plt.title(f"Daily vs Cumulative COVID-19 Cases - {country}")
+
+fig.tight_layout()
+plt.show()

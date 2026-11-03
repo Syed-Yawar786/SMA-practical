@@ -1,0 +1,43 @@
+NO. 05 Aim: Solve a constrained optimization problem in credit scoring
+using KKT conditions.
+
+from scipy.optimize import minimize
+from fractions import Fraction
+
+def objective(x):
+    x1, x2 = x
+    profit = 10*x1 + 4*x2 - 2*x1**2 - x2**2
+    return -profit
+
+def constraint_risk(x):
+    return 5 - (2*x[0] + x[1])
+
+bounds = [(0, None), (0, None)]
+initial_guess = [0, 0]
+
+solution = minimize(
+    objective,
+    initial_guess,
+    method="SLSQP",
+    bounds=bounds,
+    constraints={"type": "ineq", "fun": constraint_risk}
+)
+
+if not solution.success:
+    raise RuntimeError(solution.message)
+
+x1_opt, x2_opt = solution.x
+max_profit = -solution.fun
+
+print("--- KKT CONSTRAINED OPTIMIZATION RESULTS ---")
+print(f"Optimal x1 (Income Stability): {x1_opt:.4f}")
+print(f"Optimal x2 (Debt-to-Income): {x2_opt:.4f}")
+print(f"Maximum objective value: {max_profit:.4f}")
+
+print("\nFRACTIONS:")
+print("x1 =", Fraction(x1_opt).limit_denominator(100))
+print("x2 =", Fraction(x2_opt).limit_denominator(100))
+print("Maximum value =", Fraction(max_profit).limit_denominator(100))
+
+print("\nConstraint value:", 2*x1_opt + x2_opt)
+print("Constraint satisfied:", constraint_risk(solution.x) >= -1e-6)

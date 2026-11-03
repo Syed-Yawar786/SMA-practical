@@ -1,0 +1,50 @@
+NO. 04 Aim: Use the Secant method to solve an energy consumption
+equation for peak demand prediction.
+
+def f(x):
+    return x**3 - 5*x**2 + 7*x - 3
+
+x_prev = 0.0
+x_curr = 2.0
+
+max_iterations = 6
+tolerance = 0.0001
+
+print("-" * 85)
+
+print(f"{'Iter':<6} {'x_prev':<12} {'f(x_prev)':<14} "
+      f"{'x_curr':<12} {'f(x_curr)':<14} {'x_new':<12} Status")
+
+print("-" * 85)
+
+for i in range(1, max_iterations + 1):
+
+    f_prev = f(x_prev)
+    f_curr = f(x_curr)
+
+    denominator = f_curr - f_prev
+
+    if abs(denominator) < 1e-12:
+        print("Division by zero or very small denominator. Stopping.")
+        break
+
+    x_new = x_curr - f_curr * (x_curr - x_prev) / denominator
+
+    status = "Continue"
+
+    if abs(x_new - x_curr) < tolerance or abs(f(x_new)) < tolerance:
+        status = "STOP (Converged)"
+
+    print(f"{i:<6} {x_prev:<12.4f} {f_prev:<14.4f} "
+          f"{x_curr:<12.4f} {f_curr:<14.4f} {x_new:<12.4f} {status}")
+
+    if status != "Continue":
+        break
+
+    x_prev = x_curr
+    x_curr = x_new
+
+print("-" * 85)
+
+print(f"Estimated root / peak-demand time: {x_new:.4f} hours")
+print(f"Function value at estimated root: {f(x_new):.6f}")

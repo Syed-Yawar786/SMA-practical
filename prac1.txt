@@ -1,0 +1,79 @@
+NO. 01 Aim: Compute the covariance matrix of a portfolio and
+differentiate the portfolio return function with respect to weights.
+import numpy as np
+import pandas as pd
+
+returns = np.array([
+    [0.05, 0.02, -0.01, 0.03],
+    [0.03, 0.04, 0.02, 0.01],
+    [-0.02, -0.01, 0.03, -0.02],
+    [0.04, 0.01, -0.02, 0.05],
+    [0.01, 0.03, 0.04, 0.02]
+])
+
+assets = ["A", "B", "C", "D"]
+
+returns_df = pd.DataFrame(returns, columns=assets)
+
+print("ASSET RETURNS")
+print(returns_df)
+
+cov_matrix = np.cov(returns, rowvar=False)
+
+print("\nCOVARIANCE MATRIX")
+print(pd.DataFrame(cov_matrix, index=assets, columns=assets))
+
+expected_returns = np.mean(returns, axis=0)
+
+print("\nEXPECTED RETURNS")
+print(pd.DataFrame([expected_returns], columns=assets))
+
+def portfolio_return(weights):
+    return np.dot(weights, expected_returns)
+
+def gradient_return(weights):
+    return expected_returns
+
+weights = np.array([0.3, 0.2, 0.4, 0.1])
+
+print("\nINITIAL WEIGHTS:", weights)
+print("PORTFOLIO RETURN:", round(portfolio_return(weights), 4))
+
+gradient = gradient_return(weights)
+
+print("\nGRADIENT OF RETURN WITH RESPECT TO EACH WEIGHT")
+
+for i, asset in enumerate(assets):
+    print(f"dR/dw_{asset} = {gradient[i]:.4f}")
+
+def numerical_gradient(weights, eps=1e-6):
+    grad_num = np.zeros(len(weights))
+
+    for i in range(len(weights)):
+        w_plus = weights.copy()
+        w_minus = weights.copy()
+
+        w_plus[i] += eps
+        w_minus[i] -= eps
+
+        grad_num[i] = (
+            portfolio_return(w_plus) -
+            portfolio_return(w_minus)
+        ) / (2 * eps)
+
+    return grad_num
+
+num_gradient = numerical_gradient(weights)
+
+print("\nANALYTICAL VS NUMERICAL GRADIENT")
+
+for i, asset in enumerate(assets):
+    print(f"{asset}: {gradient[i]:.4f} vs {num_gradient[i]:.4f}")
+
+learning_rate = 0.1
+
+optimized_weights = weights + learning_rate * gradient
+optimized_weights = optimized_weights / np.sum(optimized_weights)
+
+print("\nOPTIMIZED PORTFOLIO WEIGHTS:", np.round(optimized_weights, 3))
+print("UPDATED PORTFOLIO RETURN:", round(portfolio_return(optimized_weights), 4))

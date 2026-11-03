@@ -1,0 +1,47 @@
+NO. 03 Aim: Formulate a supply chain LP problem and solve using Simplex.
+Verify the dual solution.
+
+import numpy as np
+from scipy.optimize import linprog
+
+c = np.array([3, 1])
+
+A_ub = np.array([
+    [-2, -1],
+    [-1, 1]
+])
+
+b_ub = np.array([-14, -4])
+
+primal = linprog(
+    c,
+    A_ub=A_ub,
+    b_ub=b_ub,
+    bounds=[(0, None), (0, None)],
+    method="highs-ds"
+)
+
+if not primal.success:
+    raise RuntimeError(primal.message)
+
+x1, x2 = primal.x
+minimum_cost = primal.fun
+
+print("PRIMAL SOLUTION")
+print(f"x1 = {x1:.2f}")
+print(f"x2 = {x2:.2f}")
+print(f"Minimum Z = {minimum_cost:.2f}")
+
+dual_values = -primal.ineqlin.marginals
+y1, y2 = dual_values
+
+print("\nDUAL SOLUTION (SHADOW PRICES)")
+print(f"y1 = {y1:.2f}")
+print(f"y2 = {y2:.2f}")
+
+dual_objective = 14 * y1 + 4 * y2
+
+print("\nDUALITY VERIFICATION")
+print(f"Primal objective = {minimum_cost:.2f}")
+print(f"Dual objective = {dual_objective:.2f}")
+print("Both values are equal:", np.isclose(minimum_cost, dual_objective))
