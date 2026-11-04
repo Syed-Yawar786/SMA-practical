@@ -1,0 +1,50 @@
+import cv2
+import numpy as np
+
+image = cv2.imread(r"C:\Users\Danish\Downloads\Cartest_img.jpg")
+
+if image is None:
+    print("Image not found!")
+    exit()
+
+gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+ret, global_thresh = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY)
+
+adaptive = cv2.adaptiveThreshold( gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+    cv2.THRESH_BINARY, 11, 2)
+
+data = image.reshape((-1,3))
+data = np.float32(data)
+
+criteria = (
+    cv2.TERM_CRITERIA_EPS +
+    cv2.TERM_CRITERIA_MAX_ITER,
+    100,
+    0.2
+)
+
+K = 3
+
+ret, label, center = cv2.kmeans(
+    data,
+    K,
+    None,
+    criteria,
+    10,
+    cv2.KMEANS_RANDOM_CENTERS
+)
+
+center = np.uint8(center)
+
+result = center[label.flatten()]
+
+segmented = result.reshape(image.shape)
+
+cv2.imshow("Original Image", image)
+cv2.imshow("Global Thresholding", global_thresh)
+cv2.imshow("Adaptive Thresholding", adaptive)
+cv2.imshow("K-Means Segmentation", segmented)
+
+cv2.waitKey(0)
+cv2.destroyAllWindows()

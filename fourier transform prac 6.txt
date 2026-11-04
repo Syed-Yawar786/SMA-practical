@@ -1,0 +1,59 @@
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+
+img = cv2.imread(r"C:\Users\Danish\Downloads\Cartest_img.jpg",0)
+
+if img is None:
+    print("Error: Image not found.")
+    exit()
+
+dft = cv2.dft(np.float32(img),flags=cv2.DFT_COMPLEX_OUTPUT)
+
+dft_shift = np.fft.fftshift(dft)
+
+magnitude = cv2.magnitude(
+    dft_shift[:,:,0],
+    dft_shift[:,:,1]
+)
+
+magnitude_spectrum = 20 * np.log(magnitude + 1)
+
+_,binary = cv2.threshold(
+    img, 127,255,cv2.THRESH_BINARY
+)
+
+kernel = np.ones((5,5),np.uint8)
+
+erosion = cv2.erode(
+    binary,kernel,iterations=1
+)
+
+dilation = cv2.dilate(
+    binary,kernel,iterations=1
+)
+
+plt.figure(figsize=(12,8))
+
+plt.subplot(2,2,1)
+plt.imshow(img, cmap="gray")
+plt.title("Original Image")
+plt.axis("off")
+
+plt.subplot(2,2,2)
+plt.imshow(magnitude_spectrum, cmap = "gray")
+plt.title("Fourier Magnitude Spectrum")
+plt.axis("off")
+
+plt.subplot(2,2,3)
+plt.imshow(erosion, cmap="gray")
+plt.title("Erosion")
+plt.axis("off")
+
+plt.subplot(2,2,4)
+plt.imshow(dilation, cmap="gray")
+plt.title("Dilation")
+plt.axis("off")
+
+plt.tight_layout()
+plt.show()
